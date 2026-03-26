@@ -1,64 +1,43 @@
-1. Acesso e Início
-Acesse o Portal do Azure e faça login.
+# 📊 Azure Observabilidade: Guia Técnico de Monitoramento
 
-No menu, pesquise “Monitorar”
+[![Azure](https://img.shields.io/badge/Microsoft-Azure-0089D6?style=flat-square&logo=microsoft-azure&logoColor=white)](https://azure.microsoft.com/)
+[![KQL](https://img.shields.io/badge/Language-KQL-orange?style=flat-square)](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/)
 
-2. Escolha o Recurso a Ser Monitorado
-Dentro do Azure Monitor, vá até a seção “Insights” ou clique em “VM Insights”.
+Este repositório contém o guia padrão para configuração de monitoramento, coleta de telemetria e criação de alertas inteligentes no Microsoft Azure. O foco é a utilização do **Azure Monitor**, **Log Analytics** e a linguagem **KQL (Kusto Query Language)**.
 
-Exemplo: selecione uma máquina virtual, banco de dados, App Service, etc.
+## 🚀 Sumário
+1. [Configuração de Insights](#-configuração-de-insights)
+2. [Análise de Dados com KQL](#-análise-de-dados-com-kql)
+3. [Gestão de Alertas](#-gestão-de-alertas)
+4. [Visualização e Dashboards](#-visualização-e-dashboards)
 
-3. Habilite a Coleta de Dados
-Para máquinas virtuais (por exemplo):
+---
 
-Vá em "Monitor" > "Máquinas Virtuais"
+## 🛠 1. Configuração de Insights
+Para obter visibilidade total (Guest-level metrics), é necessário habilitar a coleta de dados detalhada nos recursos.
 
-Selecione a VM que deseja monitorar.
+- **Azure Monitor Agent (AMA):** O guia foca na implementação do novo agente AMA para coleta de métricas e logs.
+- **Habilitação:** 1. No Portal do Azure, acesse **Monitor** > **Insights** > **Máquinas Virtuais**.
+  2. Selecione o recurso e clique em **Habilitar**.
+  3. Vincule o recurso a um **Log Analytics Workspace** centralizado.
 
-Clique em "Habilitar Monitoramento"
+---
 
-Isso instala o agente de monitoramento (AMA ou Log Analytics Agent).
+## 🔍 2. Análise de Dados com KQL
+A análise é dividida em métricas quantitativas (tempo real) e logs qualitativos (histórico).
 
-Conecte a VM a um workspace do Log Analytics.
+### Métricas (Performance)
+Acompanhamento de performance em tempo real através do namespace de métricas do recurso:
+* `Percentage CPU`
+* `Available Memory`
+* `Disk Write Operations/Sec`
 
-4. Configure Métricas e Logs
-Para métricas:
+### Logs (Diagnóstico Avançado)
+Exemplo de query KQL para filtrar eventos de erro críticos no log do Windows nas últimas 24 horas:
 
-Vá em "Métricas"
-
-Selecione o recurso, a métrica (como CPU, memória), e configure gráficos personalizados.
-
-Para logs:
-
-Vá em "Logs"
-
-Escolha a tabela correta (como Syslog para Linux, Event para Windows).
-
-Escreva consultas KQL (Kusto Query Language) para filtrar os dados.
-
-5. Criar Alertas
-Vá em "Alertas" > "Nova Regra"
-
-Passos:
-
-Selecionar o recurso (ex: VM, App, etc.)
-
-Definir a condição (ex: CPU > 80% por 5 minutos)
-
-Selecionar o grupo de ação (quem será notificado: e-mail, SMS, webhook, runbook, etc.)
-
-Nomear a regra e revisar.
-
-Clique em “Criar Alerta”
-
-6. (Opcional) Visualizar com Dashboards
-Vá para "Dashboard" > "+ Novo painel"
-
-Adicione gráficos de métricas, status de alertas, logs, etc.
-
-(Também é possível): 
-Criar alertas automatizados via código (ARM, Bicep, Terraform)
-
-Usar Workbooks para dashboards interativos
-
-Integrar com ferramentas como Power BI, Grafana ou ServiceNow
+```kusto
+Event
+| where TimeGenerated > ago(24h)
+| where EventLevelName == "Error"
+| summarize TotalErros = count() by Computer, RenderedDescription
+| order by TotalErros desc
